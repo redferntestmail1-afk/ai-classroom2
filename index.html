@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>AI课堂互动系统</title>
+
+<style>
+body{
+    font-family: Arial;
+    text-align:center;
+    background:#f5f5f5;
+}
+
+.container{
+    width:900px;
+    margin:20px auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+}
+
+button{
+    padding:10px 18px;
+    margin:8px;
+    cursor:pointer;
+}
+
+.option{
+    display:inline-block;
+    margin:10px;
+    padding:10px 20px;
+    border:1px solid #333;
+    border-radius:6px;
+}
+
+.bar{
+    width:300px;
+    height:20px;
+    background:#ddd;
+    margin:5px auto;
+}
+
+.inner{
+    height:20px;
+    background:#4CAF50;
+}
+
+.hidden{
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🧠 AI课堂教师控制台</h1>
+
+<!-- Q切换 -->
+<h2>切换题目</h2>
+<button onclick="setQ('Q1')">Q1</button>
+<button onclick="setQ('Q2')">Q2</button>
+<button onclick="setQ('Q3')">Q3</button>
+
+<hr>
+
+<!-- 题目展示 -->
+<h2>📘 当前题目</h2>
+<h3 id="question"></h3>
+
+<div id="options"></div>
+
+<hr>
+
+<!-- 答题 -->
+<h2>学生作答区</h2>
+<button onclick="vote('A')">A</button>
+<button onclick="vote('B')">B</button>
+<button onclick="vote('C')">C</button>
+<button onclick="vote('D')">D</button>
+
+<p id="status"></p>
+
+<hr>
+
+<!-- 控制 -->
+<h2>结果控制</h2>
+<button onclick="showResult()">显示结果 🔥</button>
+<button onclick="clearData()" style="background:red;color:white;">清空数据</button>
+
+<!-- 结果 -->
+<div id="result" class="hidden">
+
+<h3>统计结果</h3>
+
+<p>A</p>
+<div class="bar"><div id="barA" class="inner"></div></div>
+
+<p>B</p>
+<div class="bar"><div id="barB" class="inner"></div></div>
+
+<p>C</p>
+<div class="bar"><div id="barC" class="inner"></div></div>
+
+<p>D</p>
+<div class="bar"><div id="barD" class="inner"></div></div>
+
+<h3 id="total"></h3>
+
+</div>
+
+</div>
+
+<script>
+
+/* =========================
+   题目数据（来自你的文档）
+========================= */
+const questions = {
+Q1:{
+    q:"阿托品进入人体内的主要药理作用是：",
+    options:{
+        A:"激动M受体，促进乙酰胆碱与受体结合",
+        B:"阻断M受体，阻止乙酰胆碱与受体结合",
+        C:"抑制乙酰胆碱合成",
+        D:"增强副交感神经功能恢复平衡"
+    }
+},
+
+Q2:{
+    q:"阿托品的临床应用不包括：",
+    options:{
+        A:"缓解平滑肌痉挛",
+        B:"缓慢型的心律失常",
+        C:"眼科缩瞳",
+        D:"解救有机磷农药中毒"
+    }
+},
+
+Q3:{
+    q:"有机磷中毒患者使用阿托品后出现口干、视物模糊的原因是：",
+    options:{
+        A:"阿托品未发挥作用",
+        B:"M受体阻断带来的典型不良反应",
+        C:"病情恶化",
+        D:"药物拮抗失败"
+    }
+}
+};
+
+/* =========================
+   当前题目
+========================= */
+let current = "Q1";
+
+/* =========================
+   初始化显示题目
+========================= */
+function renderQuestion(){
+    let q = questions[current];
+
+    document.getElementById("question").innerText = q.q;
+
+    let html = "";
+    for(let k in q.options){
+        html += `<div class="option">${k}. ${q.options[k]}</div>`;
+    }
+
+    document.getElementById("options").innerHTML = html;
+}
+
+/* =========================
+   切换题目
+========================= */
+function setQ(q){
+    current = q;
+    renderQuestion();
+}
+
+/* =========================
+   数据存储
+========================= */
+function getData(){
+    return JSON.parse(localStorage.getItem("data") || "{}");
+}
+
+function saveData(data){
+    localStorage.setItem("data", JSON.stringify(data));
+}
+
+/* =========================
+   学生投票
+========================= */
+function vote(opt){
+
+    let data = getData();
+
+    if(!data[current]){
+        data[current] = {A:0,B:0,C:0,D:0};
+    }
+
+    data[current][opt]++;
+
+    saveData(data);
+
+    document.getElementById("status").innerText =
+        "已提交：" + opt;
+}
+
+/* =========================
+   显示结果
+========================= */
+function showResult(){
+
+    let data = getData();
+    let d = data[current] || {A:0,B:0,C:0,D:0};
+
+    let total = d.A+d.B+d.C+d.D || 1;
+
+    document.getElementById("result").classList.remove("hidden");
+
+    document.getElementById("barA").style.width = (d.A/total*300)+"px";
+    document.getElementById("barB").style.width = (d.B/total*300)+"px";
+    document.getElementById("barC").style.width = (d.C/total*300)+"px";
+    document.getElementById("barD").style.width = (d.D/total*300)+"px";
+
+    document.getElementById("total").innerText =
+        "总人数：" + (d.A+d.B+d.C+d.D);
+}
+
+/* =========================
+   清空数据
+========================= */
+function clearData(){
+    localStorage.removeItem("data");
+    alert("数据已清空");
+    document.getElementById("result").classList.add("hidden");
+}
+
+/* =========================
+   初始化
+========================= */
+renderQuestion();
+
+</script>
+
+</body>
+</html>
